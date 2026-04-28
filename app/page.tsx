@@ -1,187 +1,58 @@
 "use client"
 
 import { Shader, ChromaFlow, Swirl } from "shaders/react"
+import { useEffect, useRef, useState } from "react"
+
 import { CustomCursor } from "@/components/custom-cursor"
 import { GrainOverlay } from "@/components/grain-overlay"
-import { WorkSection } from "@/components/sections/work-section"
-import { ServicesSection } from "@/components/sections/services-section"
-import { AboutSection } from "@/components/sections/about-section"
-import { ContactSection } from "@/components/sections/contact-section"
 import { MagneticButton } from "@/components/magnetic-button"
-import { useRef, useEffect, useState } from "react"
+import { BenchmarkSection } from "@/components/sections/benchmark-section"
+import { DataStorySection } from "@/components/sections/data-story-section"
+import { DemoSimulator } from "@/components/sections/demo-simulator"
+import { DistributedArchitectureSection } from "@/components/sections/distributed-architecture-section"
+import { HeroSection } from "@/components/sections/hero-section"
+import { KpiStrip } from "@/components/sections/kpi-strip"
+import { PipelineSection } from "@/components/sections/pipeline-section"
 
 export default function Home() {
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [currentSection, setCurrentSection] = useState(0)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const touchStartY = useRef(0)
-  const touchStartX = useRef(0)
-  const shaderContainerRef = useRef<HTMLDivElement>(null)
-  const scrollThrottleRef = useRef<number>()
+  const horizontalSectionsRef = useRef<HTMLDivElement>(null)
+  const demoSectionRef = useRef<HTMLElement>(null)
+  const [activePanel, setActivePanel] = useState(0)
 
-  useEffect(() => {
-    const checkShaderReady = () => {
-      if (shaderContainerRef.current) {
-        const canvas = shaderContainerRef.current.querySelector("canvas")
-        if (canvas && canvas.width > 0 && canvas.height > 0) {
-          setIsLoaded(true)
-          return true
-        }
-      }
-      return false
-    }
+  const scrollToSection = (element: HTMLElement | null) => {
+    element?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
-    if (checkShaderReady()) return
-
-    const intervalId = setInterval(() => {
-      if (checkShaderReady()) {
-        clearInterval(intervalId)
-      }
-    }, 100)
-
-    const fallbackTimer = setTimeout(() => {
-      setIsLoaded(true)
-    }, 1500)
-
-    return () => {
-      clearInterval(intervalId)
-      clearTimeout(fallbackTimer)
-    }
-  }, [])
-
-  const scrollToSection = (index: number) => {
-    if (scrollContainerRef.current) {
-      const sectionWidth = scrollContainerRef.current.offsetWidth
-      scrollContainerRef.current.scrollTo({
-        left: sectionWidth * index,
-        behavior: "smooth",
-      })
-      setCurrentSection(index)
-    }
+  const scrollToPanel = (index: number) => {
+    if (!horizontalSectionsRef.current) return
+    const width = horizontalSectionsRef.current.clientWidth
+    horizontalSectionsRef.current.scrollTo({
+      left: width * index,
+      behavior: "smooth",
+    })
+    setActivePanel(index)
   }
 
   useEffect(() => {
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY.current = e.touches[0].clientY
-      touchStartX.current = e.touches[0].clientX
-    }
+    const container = horizontalSectionsRef.current
+    if (!container) return
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (Math.abs(e.touches[0].clientY - touchStartY.current) > 10) {
-        e.preventDefault()
-      }
-    }
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      const touchEndY = e.changedTouches[0].clientY
-      const touchEndX = e.changedTouches[0].clientX
-      const deltaY = touchStartY.current - touchEndY
-      const deltaX = touchStartX.current - touchEndX
-
-      if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
-        if (deltaY > 0 && currentSection < 4) {
-          scrollToSection(currentSection + 1)
-        } else if (deltaY < 0 && currentSection > 0) {
-          scrollToSection(currentSection - 1)
-        }
-      }
-    }
-
-    const container = scrollContainerRef.current
-    if (container) {
-      container.addEventListener("touchstart", handleTouchStart, { passive: true })
-      container.addEventListener("touchmove", handleTouchMove, { passive: false })
-      container.addEventListener("touchend", handleTouchEnd, { passive: true })
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("touchstart", handleTouchStart)
-        container.removeEventListener("touchmove", handleTouchMove)
-        container.removeEventListener("touchend", handleTouchEnd)
-      }
-    }
-  }, [currentSection])
-
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault()
-
-        if (!scrollContainerRef.current) return
-
-        scrollContainerRef.current.scrollBy({
-          left: e.deltaY,
-          behavior: "instant",
-        })
-
-        const sectionWidth = scrollContainerRef.current.offsetWidth
-        const newSection = Math.round(scrollContainerRef.current.scrollLeft / sectionWidth)
-        if (newSection !== currentSection) {
-          setCurrentSection(newSection)
-        }
-      }
-    }
-
-    const container = scrollContainerRef.current
-    if (container) {
-      container.addEventListener("wheel", handleWheel, { passive: false })
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("wheel", handleWheel)
-      }
-    }
-  }, [currentSection])
-
-  useEffect(() => {
     const handleScroll = () => {
-      if (scrollThrottleRef.current) return
-
-      scrollThrottleRef.current = requestAnimationFrame(() => {
-        if (!scrollContainerRef.current) {
-          scrollThrottleRef.current = undefined
-          return
-        }
-
-        const sectionWidth = scrollContainerRef.current.offsetWidth
-        const scrollLeft = scrollContainerRef.current.scrollLeft
-        const newSection = Math.round(scrollLeft / sectionWidth)
-
-        if (newSection !== currentSection && newSection >= 0 && newSection <= 4) {
-          setCurrentSection(newSection)
-        }
-
-        scrollThrottleRef.current = undefined
-      })
+      const width = container.clientWidth
+      if (!width) return
+      setActivePanel(Math.round(container.scrollLeft / width))
     }
 
-    const container = scrollContainerRef.current
-    if (container) {
-      container.addEventListener("scroll", handleScroll, { passive: true })
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("scroll", handleScroll)
-      }
-      if (scrollThrottleRef.current) {
-        cancelAnimationFrame(scrollThrottleRef.current)
-      }
-    }
-  }, [currentSection])
+    container.addEventListener("scroll", handleScroll, { passive: true })
+    return () => container.removeEventListener("scroll", handleScroll)
+  }, [])
 
   return (
-    <main className="relative h-screen w-full overflow-hidden bg-background">
+    <main className="relative min-h-screen w-full bg-background">
       <CustomCursor />
       <GrainOverlay />
 
-      <div
-        ref={shaderContainerRef}
-        className={`fixed inset-0 z-0 transition-opacity duration-700 ${isLoaded ? "opacity-100" : "opacity-0"}`}
-        style={{ contain: "strict" }}
-      >
+      <div className="fixed inset-0 z-0" style={{ contain: "strict" }}>
         <Shader className="h-full w-full">
           <Swirl
             colorA="#1275d8"
@@ -212,107 +83,79 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/20" />
       </div>
 
-      <nav
-        className={`fixed left-0 right-0 top-0 z-50 flex items-center justify-between px-6 py-6 transition-opacity duration-700 md:px-12 ${
-          isLoaded ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <button
-          onClick={() => scrollToSection(0)}
-          className="flex items-center gap-2 transition-transform hover:scale-105"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-foreground/15 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-foreground/25">
-            <span className="font-sans text-xl font-bold text-foreground">A</span>
+      <header className="fixed left-0 right-0 top-0 z-40 px-6 py-6 md:px-12">
+        <div className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-foreground/15 bg-background/35 px-4 py-3 backdrop-blur-xl">
+          <button
+            className="flex items-center gap-2 text-left transition-transform hover:scale-[1.02]"
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: "smooth" })
+              scrollToPanel(0)
+            }}
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground/15">
+              <span className="text-sm font-semibold text-foreground">DO</span>
+            </div>
+            <span className="font-sans text-sm font-semibold text-foreground md:text-base">Distributed Urdu OCR</span>
+          </button>
+          <div className="hidden items-center gap-2 md:flex">
+            <MagneticButton variant="secondary" onClick={() => scrollToPanel(4)}>
+              View Architecture
+            </MagneticButton>
+            <MagneticButton variant="primary" onClick={() => scrollToSection(demoSectionRef.current)}>
+              Run Demo
+            </MagneticButton>
           </div>
-          <span className="font-sans text-xl font-semibold tracking-tight text-foreground">Acme</span>
-        </button>
-
-        <div className="hidden items-center gap-8 md:flex">
-          {["Home", "Work", "Services", "About", "Contact"].map((item, index) => (
-            <button
-              key={item}
-              onClick={() => scrollToSection(index)}
-              className={`group relative font-sans text-sm font-medium transition-colors ${
-                currentSection === index ? "text-foreground" : "text-foreground/80 hover:text-foreground"
-              }`}
-            >
-              {item}
-              <span
-                className={`absolute -bottom-1 left-0 h-px bg-foreground transition-all duration-300 ${
-                  currentSection === index ? "w-full" : "w-0 group-hover:w-full"
-                }`}
-              />
-            </button>
-          ))}
         </div>
+      </header>
 
-        <MagneticButton variant="secondary" onClick={() => scrollToSection(4)}>
-          Get Started
-        </MagneticButton>
-      </nav>
-
-      <div
-        ref={scrollContainerRef}
-        data-scroll-container
-        className={`relative z-10 flex h-screen overflow-x-auto overflow-y-hidden transition-opacity duration-700 ${
-          isLoaded ? "opacity-100" : "opacity-0"
-        }`}
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        {/* Hero Section */}
-        <section className="flex min-h-screen w-screen shrink-0 flex-col justify-end px-6 pb-16 pt-24 md:px-12 md:pb-24">
-          <div className="max-w-3xl">
-            <div className="mb-4 inline-block animate-in fade-in slide-in-from-bottom-4 rounded-full border border-foreground/20 bg-foreground/15 px-4 py-1.5 backdrop-blur-md duration-700">
-              <p className="font-mono text-xs text-foreground/90">WebGL Powered Design</p>
+      <div className="relative z-10">
+        <section className="relative">
+          <div
+            ref={horizontalSectionsRef}
+            data-scroll-container
+            className="flex min-h-screen snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="min-w-full shrink-0 snap-start">
+              <HeroSection onRunDemo={() => scrollToSection(demoSectionRef.current)} onViewArchitecture={() => scrollToPanel(4)} />
+              <KpiStrip />
             </div>
-            <h1 className="mb-6 animate-in fade-in slide-in-from-bottom-8 font-sans text-6xl font-light leading-[1.1] tracking-tight text-foreground duration-1000 md:text-7xl lg:text-8xl">
-              <span className="text-balance">
-                Creative experiences
-                <br />
-                in fluid motion
-              </span>
-            </h1>
-            <p className="mb-8 max-w-xl animate-in fade-in slide-in-from-bottom-4 text-lg leading-relaxed text-foreground/90 duration-1000 delay-200 md:text-xl">
-              <span className="text-pretty">
-                Transforming digital spaces with dynamic shader effects and real-time visual experiences that captivate
-                and inspire.
-              </span>
-            </p>
-            <div className="flex animate-in fade-in slide-in-from-bottom-4 flex-col gap-4 duration-1000 delay-300 sm:flex-row sm:items-center">
-              <MagneticButton
-                size="lg"
-                variant="primary"
-                onClick={() => window.open("https://v0.app/templates/R3n0gnvYFbO", "_blank")}
-              >
-                Open in v0
-              </MagneticButton>
-              <MagneticButton size="lg" variant="secondary" onClick={() => scrollToSection(2)}>
-                View Demo
-              </MagneticButton>
+            <div className="min-w-full shrink-0 snap-start">
+              <DataStorySection />
+            </div>
+            <div className="min-w-full shrink-0 snap-start">
+              <PipelineSection />
+            </div>
+            <div className="min-w-full shrink-0 snap-start">
+              <BenchmarkSection />
+            </div>
+            <div id="architecture" className="min-w-full shrink-0 snap-start">
+              <DistributedArchitectureSection />
             </div>
           </div>
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-in fade-in duration-1000 delay-500">
-            <div className="flex items-center gap-2">
-              <p className="font-mono text-xs text-foreground/80">Scroll to explore</p>
-              <div className="flex h-6 w-12 items-center justify-center rounded-full border border-foreground/20 bg-foreground/15 backdrop-blur-md">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-foreground/80" />
-              </div>
+          <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center">
+            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-foreground/20 bg-background/40 px-3 py-2 backdrop-blur-xl">
+              <span className="hidden px-1 text-[10px] uppercase tracking-[0.14em] text-foreground/70 md:inline">
+                Horizontal sections
+              </span>
+              {[0, 1, 2, 3, 4].map((panel) => (
+                <button
+                  key={panel}
+                  onClick={() => scrollToPanel(panel)}
+                  className={`h-2.5 w-2.5 rounded-full transition ${activePanel === panel ? "bg-foreground" : "bg-foreground/35 hover:bg-foreground/60"}`}
+                  aria-label={`Go to section ${panel + 1}`}
+                />
+              ))}
             </div>
           </div>
         </section>
 
-        <WorkSection />
-        <ServicesSection />
-        <AboutSection scrollToSection={scrollToSection} />
-        <ContactSection />
+        <section ref={demoSectionRef} id="demo" className="min-h-screen px-6 py-24 md:px-12">
+          <div className="mx-auto flex min-h-[calc(100vh-12rem)] w-full max-w-[1320px] items-center">
+            <DemoSimulator />
+          </div>
+        </section>
       </div>
-
-      <style jsx global>{`
-        div::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </main>
   )
 }
