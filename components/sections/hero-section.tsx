@@ -10,7 +10,7 @@ interface HeroSectionProps {
 
 export function HeroSection({ onRunDemo, onViewArchitecture }: HeroSectionProps) {
   return (
-    <section className="relative px-6 pb-14 pt-32 md:px-12 md:pb-20 md:pt-36">
+    <section className="relative px-6 pb-14 pt-32 md:px-12 md:pb-20 md:pt-32">
       <div className="mx-auto max-w-6xl">
         <Badge variant="outline" className="mb-6 border-foreground/20 bg-foreground/10 text-foreground/90">
           Distributed Urdu OCR

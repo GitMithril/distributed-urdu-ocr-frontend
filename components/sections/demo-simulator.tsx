@@ -64,6 +64,19 @@ export function DemoSimulator() {
     }
   }
 
+  const handleClearSelection = () => {
+    setSelectedZip(null)
+    setExtractedFiles([])
+    setValidationMessage(null)
+    setErrorMessage(null)
+    setJobId(null)
+    setStatus(null)
+    setResult(null)
+    setSelectedOutput(null)
+    setMode("backend")
+    setPhase("idle")
+  }
+
   const handleStart = async () => {
     if (!selectedZip) {
       const message = "Please select a zip archive before starting."
@@ -234,6 +247,7 @@ export function DemoSimulator() {
           extractedFiles={extractedFiles}
           validationMessage={validationMessage}
           onZipSelected={handleZipSelection}
+          onClear={handleClearSelection}
           onStart={handleStart}
         />
         <ProcessingPanel phase={phase} mode={mode} status={status} />

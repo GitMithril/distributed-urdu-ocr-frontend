@@ -93,9 +93,9 @@ export default function Home() {
             }}
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground/15">
-              <span className="text-sm font-semibold text-foreground">DO</span>
+              <span className="text-sm font-semibold text-foreground">NR</span>
             </div>
-            <span className="font-sans text-sm font-semibold text-foreground md:text-base">Distributed Urdu OCR</span>
+            <span className="font-sans text-sm font-semibold text-foreground md:text-base">NastaRead</span>
           </button>
           <div className="hidden items-center gap-2 md:flex">
             <MagneticButton variant="secondary" onClick={() => scrollToPanel(4)}>
@@ -136,7 +136,7 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center">
             <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-foreground/20 bg-background/40 px-3 py-2 backdrop-blur-xl">
               <span className="hidden px-1 text-[10px] uppercase tracking-[0.14em] text-foreground/70 md:inline">
-                Horizontal sections
+                Scroll to explore
               </span>
               {[0, 1, 2, 3, 4].map((panel) => (
                 <button

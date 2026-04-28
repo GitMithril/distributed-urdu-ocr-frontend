@@ -1,7 +1,7 @@
 "use client"
 
 import { useId, useState, type ChangeEvent, type DragEvent } from "react"
-import { AlertTriangle, FileArchive, FileImage, FileText, UploadCloud } from "lucide-react"
+import { AlertTriangle, FileArchive, FileImage, FileText, UploadCloud, X } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ interface UploadPanelProps {
   extractedFiles: ExtractedInputFile[]
   validationMessage: string | null
   onZipSelected: (file: File) => void
+  onClear: () => void
   onStart: () => void
 }
 
@@ -22,6 +23,7 @@ export function UploadPanel({
   extractedFiles,
   validationMessage,
   onZipSelected,
+  onClear,
   onStart,
 }: UploadPanelProps) {
   const [isDragging, setIsDragging] = useState(false)
@@ -129,19 +131,34 @@ export function UploadPanel({
         </div>
       )}
 
-      <Button
-        className="mt-5 w-full"
-        onClick={onStart}
-        disabled={
-          phase === "uploading" ||
-          phase === "processing" ||
-          !selectedZipName ||
-          validFiles.length === 0 ||
-          Boolean(validationMessage)
-        }
-      >
-        {phase === "uploading" ? "Uploading..." : "Start Distributed Job"}
-      </Button>
+      <div className="mt-5 flex items-center gap-2">
+        <Button
+          className="flex-1"
+          onClick={onStart}
+          disabled={
+            phase === "uploading" ||
+            phase === "processing" ||
+            !selectedZipName ||
+            validFiles.length === 0 ||
+            Boolean(validationMessage)
+          }
+        >
+          {phase === "uploading" ? "Uploading..." : "Start Distributed Job"}
+        </Button>
+        <button
+          type="button"
+          onClick={onClear}
+          disabled={
+            phase === "uploading" ||
+            phase === "processing" ||
+            (!selectedZipName && extractedFiles.length === 0 && !validationMessage)
+          }
+          className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-white bg-white text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-45"
+          aria-label="Clear selected files"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
     </article>
   )
 }
