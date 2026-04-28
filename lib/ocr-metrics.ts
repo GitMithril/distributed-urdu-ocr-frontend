@@ -22,26 +22,19 @@ export const preprocessingSteps = [
   "Aspect-ratio-preserving right padding to width: 2048",
 ] as const
 
-export const syntheticDegradationScenarios = [
-  {
-    id: "noise",
-    title: "Additive Noise",
-    before: "Salt-and-pepper artifacts + scanner grain",
-    after: "Denoised texture while preserving Urdu glyph edges",
-  },
-  {
-    id: "blur",
-    title: "Motion + Defocus Blur",
-    before: "Stroked Nastaleeq characters become smeared",
-    after: "Edge restoration stabilizes disconnected ligatures",
-  },
-  {
-    id: "contrast",
-    title: "Low Contrast Fading",
-    before: "Foreground text blends into background paper",
-    after: "Contrast recovery improves OCR token visibility",
-  },
+export const syntheticDegradationChips = [
+  "Gaussian Blur",
+  "Gaussian Noise",
+  "Salt & Pepper",
+  "Low Contrast",
+  "Affine Skew",
+  "Padding Crop",
 ] as const
+
+export const syntheticDegradationSample = {
+  title: "Synthetic degradation sample",
+  imageSrc: "/synthetic_degradation_sample.png",
+} as const
 
 export const benchmarkPairs = [
   { metric: "CER", tesseract: 62.04, deepLearning: 3.75 },

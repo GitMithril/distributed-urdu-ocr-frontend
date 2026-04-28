@@ -1,15 +1,16 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ArrowLeft, ArrowRight } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts"
 
+import { ImageLightbox } from "@/components/image-lightbox"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import {
   datasetComposition,
   preprocessingSteps,
   splitComposition,
-  syntheticDegradationScenarios,
+  syntheticDegradationChips,
+  syntheticDegradationSample,
 } from "@/lib/ocr-metrics"
 
 const GRAPH_COLORS = {
@@ -27,7 +28,7 @@ const chartConfig = {
 }
 
 export function DataStorySection() {
-  const [activeScenario, setActiveScenario] = useState(0)
+  const [isSampleOpen, setIsSampleOpen] = useState(false)
 
   const splitChartData = useMemo(
     () =>
@@ -37,8 +38,6 @@ export function DataStorySection() {
       })),
     [],
   )
-
-  const currentScenario = syntheticDegradationScenarios[activeScenario]
 
   return (
     <section className="px-6 pb-8 pt-32 md:px-12 md:pb-10 md:pt-32">
@@ -124,50 +123,42 @@ export function DataStorySection() {
 
         <div className="mt-3 grid gap-3 xl:grid-cols-12">
           <article className="rounded-2xl border border-foreground/15 bg-foreground/10 p-3.5 backdrop-blur-md xl:col-span-12">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <h3 className="text-base font-semibold text-foreground">Synthetic degradation carousel</h3>
-                <p className="mt-1 text-xs text-foreground/70">Noise, blur, and low-contrast recovery previews</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  className="rounded-full border border-foreground/20 bg-background/40 p-2 transition hover:bg-background/70"
-                  onClick={() =>
-                    setActiveScenario(
-                      (prev) => (prev - 1 + syntheticDegradationScenarios.length) % syntheticDegradationScenarios.length,
-                    )
-                  }
-                  aria-label="Previous scenario"
-                >
-                  <ArrowLeft className="size-4 text-foreground" />
-                </button>
-                <button
-                  className="rounded-full border border-foreground/20 bg-background/40 p-2 transition hover:bg-background/70"
-                  onClick={() => setActiveScenario((prev) => (prev + 1) % syntheticDegradationScenarios.length)}
-                  aria-label="Next scenario"
-                >
-                  <ArrowRight className="size-4 text-foreground" />
-                </button>
+                <h3 className="text-base font-semibold text-foreground">Synthetic degradations used</h3>
+                <p className="mt-1 text-xs text-foreground/70">
+                  Applied transformations used to stress-test restoration robustness
+                </p>
               </div>
             </div>
 
-            <div className="mt-2 rounded-xl border border-foreground/10 bg-background/35 p-3">
-              <p className="font-mono text-xs uppercase tracking-wide text-foreground/65">{currentScenario.title}</p>
-              <div className="mt-2 grid gap-2.5 lg:grid-cols-2">
-                <div className="rounded-lg border border-foreground/10 bg-black/15 p-3">
-                  <p className="text-xs font-semibold text-foreground/70">Before degradation</p>
-                  <div className="mt-2 h-16 rounded-md bg-gradient-to-r from-foreground/10 via-foreground/20 to-foreground/10" />
-                  <p className="mt-2 text-xs text-foreground/70">{currentScenario.before}</p>
-                </div>
-                <div className="rounded-lg border border-foreground/10 bg-black/10 p-3">
-                  <p className="text-xs font-semibold text-foreground/70">After restoration</p>
-                  <div className="mt-2 h-16 rounded-md bg-gradient-to-r from-primary/30 via-foreground/20 to-accent/30" />
-                  <p className="mt-2 text-xs text-foreground/70">{currentScenario.after}</p>
-                </div>
+            <div className="mt-2 flex flex-col gap-3 rounded-xl border border-foreground/10 bg-background/35 p-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-wrap gap-2">
+                {syntheticDegradationChips.map((degradation) => (
+                  <span
+                    key={degradation}
+                    className="rounded-full border border-foreground/20 bg-background/45 px-3 py-1 text-xs text-foreground/85"
+                  >
+                    {degradation}
+                  </span>
+                ))}
               </div>
+              <button
+                onClick={() => setIsSampleOpen(true)}
+                className="rounded-full border border-foreground/25 bg-background/45 px-4 py-2 text-xs font-medium text-foreground transition hover:bg-background/75"
+              >
+                View Sample
+              </button>
             </div>
           </article>
         </div>
+
+        <ImageLightbox
+          open={isSampleOpen}
+          title={syntheticDegradationSample.title}
+          imageSrc={syntheticDegradationSample.imageSrc}
+          onClose={() => setIsSampleOpen(false)}
+        />
       </div>
     </section>
   )

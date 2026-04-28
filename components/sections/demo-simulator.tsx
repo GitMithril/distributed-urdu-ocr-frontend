@@ -234,10 +234,6 @@ export function DemoSimulator() {
         <h2 className="mt-3 text-4xl font-light tracking-tight text-foreground md:text-5xl">
           Upload → Process → Review Urdu OCR Output
         </h2>
-        <p className="mx-auto mt-3 max-w-3xl text-sm text-foreground/80">
-          Backend contract: <span className="font-mono">POST /upload</span>,{" "}
-          <span className="font-mono">GET /status</span>, <span className="font-mono">GET /result</span>
-        </p>
       </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-3">
