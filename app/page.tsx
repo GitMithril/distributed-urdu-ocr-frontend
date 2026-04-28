@@ -2,6 +2,7 @@
 
 import { Shader, ChromaFlow, Swirl } from "shaders/react"
 import { useEffect, useRef, useState } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { CustomCursor } from "@/components/custom-cursor"
 import { GrainOverlay } from "@/components/grain-overlay"
@@ -15,6 +16,7 @@ import { KpiStrip } from "@/components/sections/kpi-strip"
 import { PipelineSection } from "@/components/sections/pipeline-section"
 
 export default function Home() {
+  const panelCount = 5
   const horizontalSectionsRef = useRef<HTMLDivElement>(null)
   const demoSectionRef = useRef<HTMLElement>(null)
   const [activePanel, setActivePanel] = useState(0)
@@ -138,7 +140,7 @@ export default function Home() {
               <span className="hidden px-1 text-[10px] uppercase tracking-[0.14em] text-foreground/70 md:inline">
                 Scroll to explore
               </span>
-              {[0, 1, 2, 3, 4].map((panel) => (
+              {Array.from({ length: panelCount }, (_, panel) => panel).map((panel) => (
                 <button
                   key={panel}
                   onClick={() => scrollToPanel(panel)}
@@ -148,6 +150,29 @@ export default function Home() {
               ))}
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => scrollToPanel(Math.max(activePanel - 1, 0))}
+            disabled={activePanel === 0}
+            className={`absolute left-4 top-1/2 z-30 -translate-y-1/2 transition md:left-8 ${
+              activePanel === 0 ? "text-foreground/30" : "text-foreground hover:text-foreground/80"
+            }`}
+            aria-label="Previous section"
+          >
+            <ChevronLeft className="size-9" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToPanel(Math.min(activePanel + 1, panelCount - 1))}
+            disabled={activePanel === panelCount - 1}
+            className={`absolute right-4 top-1/2 z-30 -translate-y-1/2 transition md:right-8 ${
+              activePanel === panelCount - 1 ? "text-foreground/30" : "text-foreground hover:text-foreground/80"
+            }`}
+            aria-label="Next section"
+          >
+            <ChevronRight className="size-9" />
+          </button>
         </section>
 
         <section ref={demoSectionRef} id="demo" className="min-h-screen px-6 py-24 md:px-12">

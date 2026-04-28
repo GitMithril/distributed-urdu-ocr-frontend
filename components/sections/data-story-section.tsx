@@ -41,7 +41,7 @@ export function DataStorySection() {
   const currentScenario = syntheticDegradationScenarios[activeScenario]
 
   return (
-    <section className="px-6 pb-8 pt-24 md:px-12 md:pb-10 md:pt-28">
+    <section className="px-6 pb-8 pt-32 md:px-12 md:pb-10 md:pt-32">
       <div className="mx-auto max-w-6xl">
         <div className="mb-4">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-foreground/70">Section 2</p>
@@ -55,9 +55,9 @@ export function DataStorySection() {
         <div className="grid gap-3 xl:grid-cols-12">
           <article className="rounded-2xl border border-foreground/15 bg-foreground/10 p-3.5 backdrop-blur-md xl:col-span-4">
             <h3 className="text-base font-semibold text-foreground">Dataset composition</h3>
-            <ChartContainer config={chartConfig} className="mt-2 h-44">
+            <ChartContainer config={chartConfig} className="mt-2 h-44 justify-center [&_.recharts-pie-label-text]:fill-white">
               <PieChart>
-                <Pie data={datasetComposition} dataKey="value" nameKey="name" innerRadius={65} outerRadius={100}>
+                <Pie data={datasetComposition} dataKey="value" nameKey="name" innerRadius={55} outerRadius={80}>
                   <Cell fill="var(--color-mmu)" />
                   <Cell fill="var(--color-uhwr)" />
                 </Pie>
