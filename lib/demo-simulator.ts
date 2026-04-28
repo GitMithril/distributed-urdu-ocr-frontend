@@ -160,7 +160,7 @@ export async function uploadDocumentBatch(file: File, inputFiles: string[]): Pro
   formData.append("file", file)
 
   try {
-    const response = await fetch("/upload", {
+    const response = await fetch("/api/DL/process-batch", {
       method: "POST",
       body: formData,
     })
@@ -199,8 +199,7 @@ export async function getJobStatus(mode: ServiceMode, jobId: string, inputFiles:
     return readMockStatus(jobId)
   }
 
-  const query = new URLSearchParams({ jobId }).toString()
-  const response = await fetch(`/status?${query}`, { cache: "no-store" })
+  const response = await fetch(`/api/DL/jobs/${jobId}/status`, { cache: "no-store" })
 
   if (!response.ok) {
     if (isUnavailableStatus(response.status)) {
@@ -218,8 +217,7 @@ export async function getJobResult(mode: ServiceMode, jobId: string, inputFiles:
     return readMockResult(jobId)
   }
 
-  const query = new URLSearchParams({ jobId }).toString()
-  const response = await fetch(`/result?${query}`, { cache: "no-store" })
+  const response = await fetch(`/api/DL/jobs/${jobId}/results`, { cache: "no-store" })
 
   if (!response.ok) {
     if (isUnavailableStatus(response.status)) {
@@ -306,9 +304,19 @@ function readMockResult(jobId: string): JobResult {
 
 function normalizeBackendStatus(data: unknown, jobId: string, inputFiles: string[]): ProcessingStatus {
   const payload = asRecord(data)
-  const stage = normalizeStage(readString(payload, ["stage", "state", "status"]) ?? "queued")
+  const rawState = readString(payload, ["stage", "state", "status"]) ?? "queued"
+  const stage = normalizeStage(rawState)
   const progress = clamp(readNumber(payload, ["progress", "percent", "percentage"]) ?? 0)
-  const elapsedSeconds = Math.max(0, Math.floor(readNumber(payload, ["elapsedSeconds", "elapsed", "duration"]) ?? 0))
+
+  // Derive elapsed from start_time if the backend doesn't send it directly
+  const startTime = readNumber(payload, ["start_time", "startTime"])
+  const elapsedSeconds = Math.max(
+    0,
+    Math.floor(
+      readNumber(payload, ["elapsedSeconds", "elapsed", "duration"]) ??
+        (startTime ? (Date.now() / 1000 - startTime) : 0),
+    ),
+  )
 
   const nodes = readNodes(payload, inputFiles, progress, stage)
   const logs = readLogs(payload)
@@ -325,10 +333,34 @@ function normalizeBackendStatus(data: unknown, jobId: string, inputFiles: string
 
 function normalizeBackendResult(data: unknown, jobId: string, inputFiles: string[]): JobResult {
   const payload = asRecord(data)
-  const outputsValue = payload?.outputs
 
+  // DL backend returns { results: [{ filename, lines: string[], ... }] }
+  const resultsValue = payload?.results
+  if (Array.isArray(resultsValue)) {
+    const outputs: OcrOutputFile[] = resultsValue.map((item, index) => {
+      const r = asRecord(item)
+      const inputFile = readString(r, ["filename", "inputFile", "input"]) ?? inputFiles[index] ?? `file-${index + 1}`
+      const outputFile = mapOutputName(inputFile)
+      const rawLines = r?.lines
+      const lines: OcrLine[] = Array.isArray(rawLines)
+        ? rawLines.map((lineItem, lineIndex) => ({
+            lineNumber: lineIndex + 1,
+            text: typeof lineItem === "string" ? lineItem : String(lineItem),
+          }))
+        : []
+      return {
+        inputFile,
+        outputFile,
+        pages: [{ pageNumber: 1, lines }],
+      }
+    })
+    return { jobId, outputs }
+  }
+
+  // Fallback: legacy shape with top-level "outputs" array
+  const outputsValue = payload?.outputs
   if (!Array.isArray(outputsValue)) {
-    throw new Error("Result response missing 'outputs' array.")
+    throw new Error("Result response missing 'results' or 'outputs' array.")
   }
 
   const outputs: OcrOutputFile[] = outputsValue.map((item, index) => {
@@ -346,20 +378,15 @@ function normalizeBackendResult(data: unknown, jobId: string, inputFiles: string
                 if (typeof lineItem === "string") {
                   return { lineNumber: lineIndex + 1, text: lineItem }
                 }
-
                 const linePayload = asRecord(lineItem)
                 const text = readString(linePayload, ["text", "line", "content"])
-                if (!text) {
-                  throw new Error("Result line missing text content.")
-                }
-
+                if (!text) throw new Error("Result line missing text content.")
                 return {
                   lineNumber: Math.max(1, Math.floor(readNumber(linePayload, ["lineNumber", "line_no"]) ?? lineIndex + 1)),
                   text,
                 }
               })
             : []
-
           return {
             pageNumber: Math.max(1, Math.floor(readNumber(pagePayload, ["pageNumber", "page"]) ?? pageIndex + 1)),
             lines,
@@ -367,17 +394,10 @@ function normalizeBackendResult(data: unknown, jobId: string, inputFiles: string
         })
       : []
 
-    return {
-      inputFile,
-      outputFile,
-      pages,
-    }
+    return { inputFile, outputFile, pages }
   })
 
-  return {
-    jobId,
-    outputs,
-  }
+  return { jobId, outputs }
 }
 
 function readNodes(payload: Record<string, unknown> | null, inputFiles: string[], progress: number, stage: ProcessingStage) {
@@ -456,10 +476,11 @@ function deriveStage(progress: number): ProcessingStage {
 function normalizeStage(raw: string): ProcessingStage {
   const value = raw.toLowerCase()
   if (value.includes("fail")) return "failed"
-  if (value.includes("complete") || value.includes("done")) return "completed"
+  if (value === "succeeded" || value.includes("complete") || value.includes("done")) return "completed"
+  if (value === "processing" || value.includes("infer")) return "inferencing"
   if (value.includes("reduc")) return "reducing"
-  if (value.includes("infer")) return "inferencing"
   if (value.includes("map")) return "mapping"
+  // UPLOADING → queued
   return "queued"
 }
 
