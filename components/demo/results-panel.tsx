@@ -46,19 +46,19 @@ export function ResultsPanel({
       )}
 
       {result && (
-        <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-          <div className="space-y-2">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap gap-2">
             {result.outputs.map((output) => (
               <button
                 key={output.outputFile}
                 onClick={() => onSelectOutput(output.outputFile)}
-                className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
+                className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
                   selectedFile?.outputFile === output.outputFile
                     ? "border-primary/55 bg-primary/12 text-foreground"
                     : "border-foreground/10 bg-background/35 text-foreground/85 hover:border-foreground/30"
                 }`}
               >
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
                   <span className="truncate">{output.inputFile}</span>
                   <Badge variant="outline" className="border-foreground/20 text-foreground/80">
                     {output.outputFile}
@@ -68,13 +68,13 @@ export function ResultsPanel({
             ))}
           </div>
 
-          <div className="rounded-xl border border-foreground/10 bg-background/35 p-3">
+          <div className="min-w-0 rounded-xl border border-foreground/10 bg-background/35 p-3">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-sm text-foreground/85">
-                <FileText className="size-4" />
-                <span>{selectedFile?.outputFile ?? "No file selected"}</span>
+              <div className="flex min-w-0 items-center gap-2 text-sm text-foreground/85">
+                <FileText className="size-4 shrink-0" />
+                <span className="truncate">{selectedFile?.outputFile ?? "No file selected"}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <Button size="sm" variant="outline" onClick={onCopy} disabled={!selectedFile}>
                   <Copy className="mr-1 size-3.5" />
                   Copy
@@ -87,7 +87,7 @@ export function ResultsPanel({
             </div>
 
             <div
-              className="max-h-64 space-y-4 overflow-y-auto rounded-lg border border-foreground/10 bg-black/10 p-3 text-right"
+              className="max-h-64 w-full space-y-4 overflow-y-auto overflow-x-hidden break-words rounded-lg border border-foreground/10 bg-black/10 p-3 text-right"
               dir="rtl"
             >
               {selectedFile?.pages.map((page) => (
