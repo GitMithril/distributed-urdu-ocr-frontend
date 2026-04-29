@@ -165,9 +165,10 @@ export function startMockJob(inputFiles: string[]) {
   return jobId
 }
 
-export async function uploadDocumentBatch(file: File, inputFiles: string[]): Promise<UploadJobResult> {
+export async function uploadDocumentBatch(file: File, inputFiles: string[], multiline: boolean): Promise<UploadJobResult> {
   const formData = new FormData()
   formData.append("file", file)
+  formData.append("multiline", multiline ? "true" : "false")
 
   try {
     const response = await fetch("/api/DL/process-batch", {

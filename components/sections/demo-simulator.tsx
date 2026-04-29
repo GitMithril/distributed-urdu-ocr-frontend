@@ -32,6 +32,7 @@ export function DemoSimulator() {
   const [status, setStatus] = useState<ProcessingStatus | null>(null)
   const [result, setResult] = useState<JobResult | null>(null)
   const [selectedOutput, setSelectedOutput] = useState<string | null>(null)
+  const [multiline, setMultiline] = useState(true)
 
   const supportedInputFiles = useMemo(
     () => extractedFiles.filter((file) => file.supported).map((file) => file.name),
@@ -97,7 +98,7 @@ export function DemoSimulator() {
     setPhase("uploading")
 
     try {
-      const upload = await uploadDocumentBatch(selectedZip, supportedInputFiles)
+      const upload = await uploadDocumentBatch(selectedZip, supportedInputFiles, multiline)
       setMode(upload.mode)
       setJobId(upload.jobId)
       setPhase("processing")
@@ -249,6 +250,8 @@ export function DemoSimulator() {
           selectedZipName={selectedZip?.name ?? null}
           extractedFiles={extractedFiles}
           validationMessage={validationMessage}
+          multiline={multiline}
+          onMultilineChange={setMultiline}
           onZipSelected={handleZipSelection}
           onClear={handleClearSelection}
           onStart={handleStart}

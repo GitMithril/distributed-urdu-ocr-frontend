@@ -13,6 +13,8 @@ interface UploadPanelProps {
   selectedZipName: string | null
   extractedFiles: ExtractedInputFile[]
   validationMessage: string | null
+  multiline: boolean
+  onMultilineChange: (value: boolean) => void
   onZipSelected: (file: File) => void
   onClear: () => void
   onStart: () => void
@@ -56,6 +58,8 @@ export function UploadPanel({
   selectedZipName,
   extractedFiles,
   validationMessage,
+  multiline,
+  onMultilineChange,
   onZipSelected,
   onClear,
   onStart,
@@ -230,6 +234,35 @@ export function UploadPanel({
           )}
         </div>
       )}
+
+      {/* Single-line / Multi-line toggle */}
+      <div className="mt-4 flex items-center gap-3 rounded-lg border border-foreground/10 bg-background/30 px-3 py-2.5">
+        <span className="flex-1 text-sm text-foreground/80">Line segmentation</span>
+        <button
+          type="button"
+          onClick={() => onMultilineChange(false)}
+          disabled={busy}
+          className={`rounded px-2.5 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            !multiline
+              ? "bg-primary text-primary-foreground"
+              : "border border-foreground/20 text-foreground/60 hover:text-foreground/90"
+          }`}
+        >
+          Single line
+        </button>
+        <button
+          type="button"
+          onClick={() => onMultilineChange(true)}
+          disabled={busy}
+          className={`rounded px-2.5 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            multiline
+              ? "bg-primary text-primary-foreground"
+              : "border border-foreground/20 text-foreground/60 hover:text-foreground/90"
+          }`}
+        >
+          Multi-line
+        </button>
+      </div>
 
       <div className="mt-5 flex items-center gap-2">
         <Button
