@@ -144,6 +144,13 @@ export function DemoSimulator() {
         if (latestStatus.stage === "completed") {
           const latestResult = await getJobResult(mode, jobId, supportedInputFiles)
           if (isCancelled) return
+          // Ensure both nodes show 100% before transitioning — the status poll
+          // that first returned "completed" may have been fetched mid-transition.
+          setStatus({
+            ...latestStatus,
+            progress: 100,
+            nodes: latestStatus.nodes.map((n) => ({ ...n, progress: 100, stage: "completed" })),
+          })
           setResult(latestResult)
           setSelectedOutput(latestResult.outputs[0]?.outputFile ?? null)
           setPhase("completed")

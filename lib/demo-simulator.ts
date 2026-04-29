@@ -107,6 +107,16 @@ const urduSampleLines = [
   "حتمی متن کو صفحہ وار ترتیب دے کر فائل میں محفوظ کیا گیا۔",
 ] as const
 
+/** Zip a flat list of File objects into a single File named `zipName`. */
+export async function zipFilesToFile(files: File[], zipName: string): Promise<File> {
+  const zip = new JSZip()
+  for (const file of files) {
+    zip.file(file.name, file)
+  }
+  const blob = await zip.generateAsync({ type: "blob" })
+  return new File([blob], zipName, { type: "application/zip" })
+}
+
 export function validateZipSelection(file: File) {
   if (!file.name.toLowerCase().endsWith(".zip")) {
     throw new ZipValidationError("wrong-file-type", "Only .zip archives are accepted.")
@@ -447,7 +457,8 @@ function buildNodeAssignments(inputFiles: string[], progress: number, stage: Pro
   const firstFile = inputFiles[0] ?? "batch-001.pdf"
   const secondFile = inputFiles[1] ?? inputFiles[0] ?? "batch-002.pdf"
   const nodeOneProgress = clamp(progress + 4)
-  const nodeTwoProgress = clamp(Math.max(0, progress - 6))
+  // Cap the lag at 94 so node 2 always reaches 100 when the job completes.
+  const nodeTwoProgress = progress >= 100 ? 100 : clamp(Math.max(0, progress - 6))
 
   return [
     {
@@ -478,7 +489,7 @@ function normalizeStage(raw: string): ProcessingStage {
   if (value.includes("fail")) return "failed"
   if (value === "succeeded" || value.includes("complete") || value.includes("done")) return "completed"
   if (value === "processing" || value.includes("infer")) return "inferencing"
-  if (value.includes("reduc")) return "reducing"
+  if (value.includes("reduc") || value.includes("shuffl")) return "reducing"
   if (value.includes("map")) return "mapping"
   // UPLOADING → queued
   return "queued"
